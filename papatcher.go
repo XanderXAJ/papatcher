@@ -373,6 +373,11 @@ func run() int {
 		fmt.Fprint(os.Stderr, err)
 		return 1
 	}
+	err = os.MkdirAll(cache_dir, 0777)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		return 1
+	}
 
 	manifest_url := fmt.Sprintf("%v/%v/%v", stream.DownloadUrl, stream.TitleFolder, stream.ManifestName)
 
