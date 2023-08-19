@@ -202,6 +202,19 @@ var platform_map = map[string]map[string]string{
 	},
 }
 
+func substHomeDir(path string) (string, error) {
+	comp := filepath.SplitList(path)
+
+	if comp[0] == "~" {
+		usr, err := user.Current()
+		if err != nil {
+			return "", fmt.Errorf("~ in path and could not figure out the current user: %v", err)
+		}
+		comp[0] = usr.HomeDir
+	}
+	return filepath.Join(comp...), nil
+}
+
 func main() {
 	os.Exit(run())
 }
@@ -226,18 +239,6 @@ func run() int {
 	ncpus := runtime.NumCPU()
 	runtime.GOMAXPROCS(ncpus)
 
-	usr, err := user.Current()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not figure out the current user: %v", err)
-		return 1
-	}
-
-	if platform_home == "~" {
-		platform_home = usr.HomeDir
-	}
-
-	cache_dir := filepath.Join(platform_home, platform_cache_dir)
-
 	var devenv bool
 	flag.BoolVar(&devenv, "dev", false, "Use PAnet dev environment")
 
@@ -249,6 +250,9 @@ func run() int {
 
 	var root_dir string
 	flag.StringVar(&root_dir, "dir", "", "Target directory to patch")
+
+	var cache_dir string
+	flag.StringVar(&cache_dir, "cachedir", "", "Cache directory")
 
 	var update_only bool
 	flag.BoolVar(&update_only, "update-only", false, "Only do an update, don't launch")
@@ -348,6 +352,17 @@ func run() int {
 
 	if root_dir == "" {
 		root_dir = filepath.Join(platform_home, platform_dir)
+		root_dir, err = substHomeDir(root_dir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error substituting home directory: %v", err)
+		}
+	}
+	if cache_dir == "" {
+		cache_dir = filepath.Join(platform_home, platform_cache_dir)
+		cache_dir, err = substHomeDir(cache_dir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error substituting home directory: %v", err)
+		}
 	}
 	if !quiet {
 		fmt.Printf("Using target directory %v\n", root_dir)
