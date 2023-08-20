@@ -4,6 +4,7 @@ This is a forked version of [the official papatcher](https://github.com/planetar
 
 - Allow configuring the cache directory using `-cachedir`
 - Only require a user to exist if either `-dir` or `-cachedir` are prefixed with `~` (home directory)
+    - If `papatcher` fails because a user doesn't exist, specify exact paths for `-dir` and `-cachedir`
 
 It also fixes a certificate issue when contacting PA services by instead relying on the OS certificate store.
 
